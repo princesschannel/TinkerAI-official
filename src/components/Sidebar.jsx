@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Menu, Wand, UserCircle, Home, MessageSquare, 
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Menu, Wand, UserCircle, Home, MessageSquare,
   Image as ImageIcon, LayoutGrid, UserRoundPen,
-  ChevronDown, Paperclip, Mic, SendHorizontal, X 
+  ChevronDown, Paperclip, Mic, SendHorizontal, X
 } from 'lucide-react';
+import { sendMessage } from '../lib/gemini';
 
 // --- Helper Component: Main Sidebar Navigation Items ---
 const NavItem = ({ icon, label }) => (
@@ -16,7 +17,7 @@ const NavItem = ({ icon, label }) => (
 
 // --- Helper Component: Character List Items ---
 const SubNavItem = ({ label, color, onClick, isActive }) => (
-  <div 
+  <div
     onClick={onClick}
     className={`${color} rounded-lg p-3 cursor-pointer hover:brightness-110 transition-all shadow-sm active:scale-95 border-2 ${isActive ? 'border-white/60 scale-105 shadow-lg' : 'border-transparent opacity-80'}`}
   >
@@ -33,19 +34,19 @@ const TinkerApp = () => {
   };
 
   const characterThemes = {
-    'Periwinkle': { 
-      glow: 'shadow-[0_0_40px_rgba(135,206,250,0.3)]', 
+    'Periwinkle': {
+      glow: 'shadow-[0_0_40px_rgba(135,206,250,0.3)]',
       border: 'border-[#87CEFA]/30',
       accent: 'text-[#87CEFA]',
-      msgBg: 'bg-[#87CEFA]/10' 
+      msgBg: 'bg-[#87CEFA]/10'
     },
-    'Silvermist': { 
-      glow: 'shadow-[0_0_40px_rgba(173,216,230,0.3)]', 
+    'Silvermist': {
+      glow: 'shadow-[0_0_40px_rgba(173,216,230,0.3)]',
       border: 'border-[#ADD8E6]/30',
       accent: 'text-[#ADD8E6]',
       msgBg: 'bg-[#ADD8E6]/10'
     },
-    'Gliss': { 
+    'Gliss': {
       glow: 'shadow-[0_0_40px_rgba(175,238,238,0.3)]',
       border: 'border-[#AFEEEE]/30',
       accent: 'text-[#AFEEEE]',
@@ -55,8 +56,11 @@ const TinkerApp = () => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeCharacter, setActiveCharacter] = useState('Periwinkle');
-  const [isTyping, setIsTyping] = useState(false); 
-  
+  const [isTyping, setIsTyping] = useState(false);
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
   const currentTheme = characterThemes[activeCharacter];
 
   const [messages, setMessages] = useState([
@@ -67,6 +71,11 @@ const TinkerApp = () => {
       text: `I'm Periwinkle. ${characterGreetings['Periwinkle']}`,
     }
   ]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
 
   useEffect(() => {
     setIsTyping(true);
@@ -89,6 +98,44 @@ const TinkerApp = () => {
     setIsSidebarOpen(false);
   };
 
+  const handleSend = async () => {
+    const text = inputText.trim();
+    if (!text || isLoading) return;
+
+    const userMessage = { id: Date.now(), sender: 'user', text };
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    setInputText('');
+    setIsLoading(true);
+
+    try {
+      const reply = await sendMessage(activeCharacter, updatedMessages);
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now() + 1, sender: 'bot', text: reply },
+      ]);
+    } catch (error) {
+      console.error('Gemini API error:', error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          text: '✨ Oh no, my pixie dust ran out! Something went wrong. Please try again.',
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   const [chatHistory] = useState([
     { id: 1, title: "Moving on from heartbreak", date: "2 mins ago" },
     { id: 2, title: "Healthy morning routines", date: "1 hour ago" },
@@ -105,9 +152,9 @@ const TinkerApp = () => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#0a4559] font-sans text-white">
-      
+
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -119,7 +166,7 @@ const TinkerApp = () => {
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:relative lg:translate-x-0 flex flex-col h-full ${colors.bgMain} p-5 border-r border-white/5
       `}>
-        
+
         <div className="flex items-center justify-between mb-8 px-1">
           <div className="flex items-center gap-2">
             <Wand className="w-6 h-6 -rotate-12 text-white" />
@@ -152,7 +199,7 @@ const TinkerApp = () => {
               <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[16px] h-[16px] bg-white rounded-full" />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <SubNavItem label="Silvermist" color={colors.bgSubItemDark} isActive={activeCharacter === 'Silvermist'} onClick={() => handleSwitchCharacter('Silvermist')} />
             <SubNavItem label="Periwinkle" color={colors.bgSubItemDark} isActive={activeCharacter === 'Periwinkle'} onClick={() => handleSwitchCharacter('Periwinkle')} />
@@ -178,18 +225,18 @@ const TinkerApp = () => {
         {/* Footer Icon made White */}
         <div className="pt-4 border-t border-white/5 mt-4">
           <div className={`${colors.bgCharacterHeader} rounded-lg p-3 flex items-center gap-2 cursor-pointer hover:brightness-110 transition-all text-white`}>
-             <UserRoundPen size={20} className="text-white" />
-             <span className="font-bold text-sm truncate">Princess Channel B.</span>
+            <UserRoundPen size={20} className="text-white" />
+            <span className="font-bold text-sm truncate">Princess Channel B.</span>
           </div>
         </div>
       </aside>
 
-      <main 
+      <main
         className="flex-1 relative flex items-center justify-center p-2 sm:p-4 lg:p-6 bg-cover bg-center"
         style={{ backgroundImage: `url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?q=80&w=2070&auto=format&fit=crop')` }}
       >
         <div className={`relative w-full max-w-5xl h-full lg:h-[90vh] bg-[#0a4559]/50 backdrop-blur-xl rounded-2xl lg:rounded-[40px] border transition-all duration-700 flex flex-col p-4 sm:p-6 lg:p-10 ${currentTheme.glow} ${currentTheme.border}`}>
-          
+
           <div className="flex items-center gap-3 mb-6 lg:mb-8">
             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-white">
               <Menu className="w-6 h-6" />
@@ -201,30 +248,44 @@ const TinkerApp = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-6 lg:space-y-8 pr-2 custom-scrollbar">
-            {isTyping ? (
-               <div className="flex justify-start animate-pop">
-                  <div className={`p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-xl border ${currentTheme.msgBg} ${currentTheme.border} backdrop-blur-md`}>
-                    <div className="flex gap-1 items-center h-4 text-white">
-                      <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                      <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                      <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></span>
-                    </div>
-                  </div>
-               </div>
-            ) : (
-              messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-pop`}>
-                  <div className={`
-                    max-w-[85%] lg:max-w-[65%] p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-xl border transition-all duration-500
-                    ${msg.sender === 'user' 
-                      ? 'bg-[#0a4559] text-white rounded-tr-none border-white/5' 
-                      : `${currentTheme.msgBg} text-white rounded-tl-none ${currentTheme.border} backdrop-blur-md`}
-                  `}>
-                    {msg.title && <h3 className={`font-bold text-lg lg:text-xl mb-1 lg:mb-2 transition-colors duration-500 ${currentTheme.accent}`}>{msg.title}</h3>}
-                    <p className="text-xs lg:text-sm font-medium leading-relaxed text-white opacity-90">{msg.text}</p>
+            {isTyping && !isLoading ? (
+              <div className="flex justify-start animate-pop">
+                <div className={`p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-xl border ${currentTheme.msgBg} ${currentTheme.border} backdrop-blur-md`}>
+                  <div className="flex gap-1 items-center h-4 text-white">
+                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></span>
                   </div>
                 </div>
-              ))
+              </div>
+            ) : (
+              <>
+                {messages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-pop`}>
+                    <div className={`
+                      max-w-[85%] lg:max-w-[65%] p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-xl border transition-all duration-500
+                      ${msg.sender === 'user'
+                        ? 'bg-[#0a4559] text-white rounded-tr-none border-white/5'
+                        : `${currentTheme.msgBg} text-white rounded-tl-none ${currentTheme.border} backdrop-blur-md`}
+                    `}>
+                      {msg.title && <h3 className={`font-bold text-lg lg:text-xl mb-1 lg:mb-2 transition-colors duration-500 ${currentTheme.accent}`}>{msg.title}</h3>}
+                      <p className="text-xs lg:text-sm font-medium leading-relaxed text-white opacity-90 whitespace-pre-wrap">{msg.text}</p>
+                    </div>
+                  </div>
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start animate-pop">
+                    <div className={`p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-xl border ${currentTheme.msgBg} ${currentTheme.border} backdrop-blur-md`}>
+                      <div className="flex gap-1 items-center h-4 text-white">
+                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </>
             )}
           </div>
 
@@ -234,12 +295,20 @@ const TinkerApp = () => {
                 <Paperclip className="w-4 lg:w-5 h-4 lg:h-5 text-white cursor-pointer" />
                 <Mic className="w-4 lg:w-5 h-4 lg:h-5 text-white cursor-pointer" />
               </div>
-              <input 
-                type="text" 
-                placeholder={`Chatting with ${activeCharacter}...`} 
+              <input
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={`Chatting with ${activeCharacter}...`}
                 className="bg-transparent flex-1 outline-none text-white text-xs lg:text-sm placeholder:text-white/30 font-medium"
+                disabled={isLoading}
               />
-              <button className={`ml-2 lg:ml-4 bg-[#e8dcc4] hover:bg-white transition-all rounded-full p-2 lg:p-2.5 shadow-lg active:scale-90`}>
+              <button
+                onClick={handleSend}
+                disabled={isLoading || !inputText.trim()}
+                className={`ml-2 lg:ml-4 bg-[#e8dcc4] hover:bg-white transition-all rounded-full p-2 lg:p-2.5 shadow-lg active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed`}
+              >
                 {/* Send icon kept dark for readability on the light button */}
                 <SendHorizontal className="w-4 lg:w-5 h-4 lg:h-5 text-[#0a4559]" />
               </button>
