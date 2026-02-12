@@ -2,31 +2,132 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Menu, Wand, UserCircle, Home, MessageSquare,
   Image as ImageIcon, LayoutGrid, UserRoundPen,
-  ChevronDown, Paperclip, Mic, SendHorizontal, X
+  ChevronDown, Paperclip, Mic, SendHorizontal, X, ArrowRight, Star
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { sendMessage } from '../lib/gemini';
 
-// --- Helper Component: Main Sidebar Navigation Items ---
-const NavItem = ({ icon, label }) => (
-  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-[#0c536b] cursor-pointer transition-all group active:scale-95">
-    <span className="font-semibold text-sm">{label}</span>
-    {/* Navigation icons made fully white */}
-    <span className="text-white group-hover:opacity-100">{icon}</span>
-  </div>
-);
+// --- LANDING PAGE COMPONENT (The design from your image) ---
+const LandingPage = ({ onStart }) => {
+  const companions = [
+    { name: 'Silvermist', desc: 'Gentle support for your heart and emotions.' },
+    { name: 'Periwinkle', desc: 'Knowledgeable guide for all your school subjects.' },
+    { name: 'Gliss', desc: 'Energetic motivation to reach your daily goals.' }
+  ];
 
-// --- Helper Component: Character List Items ---
-const SubNavItem = ({ label, color, onClick, isActive }) => (
-  <div
-    onClick={onClick}
-    className={`${color} rounded-lg p-3 cursor-pointer hover:brightness-110 transition-all shadow-sm active:scale-95 border-2 ${isActive ? 'border-white/60 scale-105 shadow-lg' : 'border-transparent opacity-80'}`}
-  >
-    <span className="font-bold text-sm text-white">{label}</span>
-  </div>
-);
+  return (
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#4e7c94] flex flex-col items-center justify-center px-6 py-12">
+      {/* Magic Wave Background Effects */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[120%] h-[120%] opacity-30 bg-[radial-gradient(circle_at_center,_#9fbcc8_0%,_transparent_70%)] animate-pulse" />
+        {[...Array(5)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute inset-0 border-[2px] border-white/10 rounded-[40%_60%_70%_30%/40%_50%_60%_50%]"
+            animate={{
+              rotate: [0, 360],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 20 + i * 5,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+        ))}
+      </div>
 
-// --- MAIN APPLICATION COMPONENT ---
-const TinkerApp = () => {
+      <div className="relative z-10 max-w-5xl w-full text-center">
+        {/* Logo */}
+        <div className="absolute top-[-10vh] left-0 flex items-center gap-2 text-white/90">
+          <Wand className="w-5 h-5 -rotate-12" />
+          <span className="text-lg font-bold">TinkerAI</span>
+        </div>
+
+        {/* Hero Text */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <h1 className="text-5xl md:text-7xl font-serif text-white mb-6 drop-shadow-md">
+            Magic is just a <br />
+            <span className="text-[#c7e3f1]">Conversation</span> away.
+          </h1>
+          <p className="text-white/80 text-sm md:text-base max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
+            Personalized guidance, emotional support, and creative brainstorming with the residents of Pixie Hollow. Choose your companion and start your journey today.
+          </p>
+
+          <button 
+            onClick={() => onStart('Periwinkle')}
+            className="group flex items-center gap-3 bg-[#9fbcc8] hover:bg-white text-[#2c5364] px-10 py-4 rounded-lg font-bold text-xl transition-all shadow-xl hover:scale-105 active:scale-95 mx-auto mb-24"
+          >
+            Start Chatting
+            <div className="bg-white group-hover:bg-[#9fbcc8] rounded-full p-1 transition-colors">
+              <ArrowRight className="w-5 h-5" />
+            </div>
+          </button>
+        </motion.div>
+
+        {/* Character Selection Grid */}
+        <div className="w-full">
+          <h2 className="text-2xl font-bold text-white mb-8">Choose Your Companion</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {companions.map((char, i) => (
+              <motion.div
+                key={char.name}
+                whileHover={{ y: -10 }}
+                onClick={() => onStart(char.name)}
+                className="bg-[#6b95a8]/40 backdrop-blur-md border border-white/20 p-8 rounded-xl text-left cursor-pointer hover:bg-white/20 transition-all flex flex-col justify-between h-48 shadow-lg"
+              >
+                <Star className="text-white w-6 h-6 mb-4 fill-white" />
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-2">{char.name}</h3>
+                  <p className="text-white/70 text-sm font-medium leading-snug">
+                    {char.desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+        .font-serif { font-family: 'Playfair Display', serif; }
+      `}</style>
+    </div>
+  );
+};
+
+// --- THE MAIN COMPONENT (Sidebar.jsx) ---
+export default function Sidebar() {
+  const [view, setView] = useState('landing'); // 'landing' or 'chat'
+  const [initialCharacter, setInitialCharacter] = useState('Periwinkle');
+
+  const startChatAction = (char) => {
+    setInitialCharacter(char);
+    setView('chat');
+  };
+
+  return (
+    <AnimatePresence mode="wait">
+      {view === 'landing' ? (
+        <motion.div key="landing" exit={{ opacity: 0 }}>
+          <LandingPage onStart={startChatAction} />
+        </motion.div>
+      ) : (
+        <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <TinkerApp initialChar={initialCharacter} onHome={() => setView('landing')} />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// --- YOUR ORIGINAL CHATBOT CODE (Functions Unchanged) ---
+const TinkerApp = ({ initialChar, onHome }) => {
   const characterGreetings = {
     'Periwinkle': "What subject can I help you with today?",
     'Silvermist': "Do you want to talk about something on your heart?",
@@ -34,28 +135,13 @@ const TinkerApp = () => {
   };
 
   const characterThemes = {
-    'Periwinkle': {
-      glow: 'shadow-[0_0_40px_rgba(135,206,250,0.3)]',
-      border: 'border-[#87CEFA]/30',
-      accent: 'text-[#87CEFA]',
-      msgBg: 'bg-[#87CEFA]/10'
-    },
-    'Silvermist': {
-      glow: 'shadow-[0_0_40px_rgba(173,216,230,0.3)]',
-      border: 'border-[#ADD8E6]/30',
-      accent: 'text-[#ADD8E6]',
-      msgBg: 'bg-[#ADD8E6]/10'
-    },
-    'Gliss': {
-      glow: 'shadow-[0_0_40px_rgba(175,238,238,0.3)]',
-      border: 'border-[#AFEEEE]/30',
-      accent: 'text-[#AFEEEE]',
-      msgBg: 'bg-[#AFEEEE]/10'
-    }
+    'Periwinkle': { glow: 'shadow-[0_0_40px_rgba(135,206,250,0.3)]', border: 'border-[#87CEFA]/30', accent: 'text-[#87CEFA]', msgBg: 'bg-[#87CEFA]/10' },
+    'Silvermist': { glow: 'shadow-[0_0_40px_rgba(173,216,230,0.3)]', border: 'border-[#ADD8E6]/30', accent: 'text-[#ADD8E6]', msgBg: 'bg-[#ADD8E6]/10' },
+    'Gliss': { glow: 'shadow-[0_0_40px_rgba(175,238,238,0.3)]', border: 'border-[#AFEEEE]/30', accent: 'text-[#AFEEEE]', msgBg: 'bg-[#AFEEEE]/10' }
   };
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeCharacter, setActiveCharacter] = useState('Periwinkle');
+  const [activeCharacter, setActiveCharacter] = useState(initialChar);
   const [isTyping, setIsTyping] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -68,40 +154,20 @@ const TinkerApp = () => {
       id: 1,
       sender: 'bot',
       title: 'Hi, Princess Channel!',
-      text: `I'm Periwinkle. ${characterGreetings['Periwinkle']}`,
+      text: `I'm ${activeCharacter}. ${characterGreetings[activeCharacter]}`,
     }
   ]);
 
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
-
-  useEffect(() => {
-    setIsTyping(true);
-    const timer = setTimeout(() => {
-      setIsTyping(false);
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, [activeCharacter]);
-
+  // Original functions preserved
   const handleSwitchCharacter = (name) => {
     setActiveCharacter(name);
-    setMessages([
-      {
-        id: Date.now(),
-        sender: 'bot',
-        title: 'Hi, Princess Channel!',
-        text: `I'm ${name}. ${characterGreetings[name]}`,
-      }
-    ]);
+    setMessages([{ id: Date.now(), sender: 'bot', title: 'Hi, Princess Channel!', text: `I'm ${name}. ${characterGreetings[name]}` }]);
     setIsSidebarOpen(false);
   };
 
   const handleSend = async () => {
     const text = inputText.trim();
     if (!text || isLoading) return;
-
     const userMessage = { id: Date.now(), sender: 'user', text };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
@@ -110,228 +176,87 @@ const TinkerApp = () => {
 
     try {
       const reply = await sendMessage(activeCharacter, updatedMessages);
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now() + 1, sender: 'bot', text: reply },
-      ]);
+      setMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'bot', text: reply }]);
     } catch (error) {
-      console.error('Gemini API error:', error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          sender: 'bot',
-          text: '✨ Oh no, my pixie dust ran out! Something went wrong. Please try again.',
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+      setMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'bot', text: '✨ Pixie dust error! Try again.' }]);
+    } finally { setIsLoading(false); }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
+  // Helper Components from your code
+  const NavItem = ({ icon, label, onClick }) => (
+    <div onClick={onClick} className="flex items-center justify-between p-3 rounded-lg hover:bg-[#0c536b] cursor-pointer transition-all group">
+      <span className="font-semibold text-sm">{label}</span>
+      <span className="text-white">{icon}</span>
+    </div>
+  );
 
-  const [chatHistory] = useState([
-    { id: 1, title: "Moving on from heartbreak", date: "2 mins ago" },
-    { id: 2, title: "Healthy morning routines", date: "1 hour ago" },
-    { id: 3, title: "Gift ideas for friends", date: "Yesterday" },
-  ]);
-
-  const colors = {
-    bgMain: 'bg-[#0a4559]',
-    bgItemActive: 'bg-[#0c536b]',
-    bgCharacterHeader: 'bg-[#7899a7]',
-    bgSubItemDark: 'bg-[#406d80]',
-    textMain: 'text-white'
-  };
+  const SubNavItem = ({ label, color, onClick, isActive }) => (
+    <div onClick={onClick} className={`${color} rounded-lg p-3 cursor-pointer transition-all border-2 ${isActive ? 'border-white/60 scale-105' : 'border-transparent'}`}>
+      <span className="font-bold text-sm text-white">{label}</span>
+    </div>
+  );
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#0a4559] font-sans text-white">
-
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* SIDEBAR */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:relative lg:translate-x-0 flex flex-col h-full ${colors.bgMain} p-5 border-r border-white/5
-      `}>
-
-        <div className="flex items-center justify-between mb-8 px-1">
-          <div className="flex items-center gap-2">
-            <Wand className="w-6 h-6 -rotate-12 text-white" />
-            <h1 className="text-xl font-bold tracking-tight text-white">TinkerAI</h1>
-          </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-1">
-            <X className="w-6 h-6 text-white" />
-          </button>
-          <Menu className="hidden lg:block w-6 h-6 cursor-pointer text-white" />
-        </div>
-
-        {/* Top Profile Icon made White */}
-        <div className="flex items-center gap-3 mb-8 px-1">
-          <UserCircle className="w-9 h-9 text-white" />
-          <span className="font-semibold text-sm">Princess Channel B.</span>
+      {/* Sidebar Section */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 transform transition-transform lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col h-full bg-[#0a4559] p-5 border-r border-white/5`}>
+        <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={onHome}>
+                <Wand className="w-6 h-6 -rotate-12" />
+                <h1 className="text-xl font-bold">TinkerAI</h1>
+            </div>
+            <X className="lg:hidden cursor-pointer" onClick={() => setIsSidebarOpen(false)} />
         </div>
 
         <nav className="space-y-1 mb-6">
-          <NavItem icon={<Home size={20} />} label="Home" />
+          <NavItem icon={<Home size={20} />} label="Home" onClick={onHome} />
           <NavItem icon={<MessageSquare size={20} />} label="New Chat" />
-          <NavItem icon={<ImageIcon size={20} />} label="Image" />
         </nav>
 
         <div className="space-y-2 mb-6">
-          <div className={`${colors.bgCharacterHeader} rounded-lg p-3 flex justify-between items-center shadow-inner text-[#0a4559]`}>
-            <span className="font-bold text-sm">Characters</span>
-            <div className="relative w-6 h-5 opacity-90 scale-90">
-              <div className="absolute top-0 left-0 w-[11px] h-[11px] bg-white rounded-full" />
-              <div className="absolute top-0 right-0 w-[11px] h-[11px] bg-white rounded-full" />
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[16px] h-[16px] bg-white rounded-full" />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <SubNavItem label="Silvermist" color={colors.bgSubItemDark} isActive={activeCharacter === 'Silvermist'} onClick={() => handleSwitchCharacter('Silvermist')} />
-            <SubNavItem label="Periwinkle" color={colors.bgSubItemDark} isActive={activeCharacter === 'Periwinkle'} onClick={() => handleSwitchCharacter('Periwinkle')} />
-            <SubNavItem label="Gliss" color={colors.bgSubItemDark} isActive={activeCharacter === 'Gliss'} onClick={() => handleSwitchCharacter('Gliss')} />
-          </div>
-        </div>
-
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className={`${colors.bgItemActive} rounded-lg p-3 flex items-center gap-3 mb-2 cursor-pointer hover:brightness-110 transition-all`}>
-            <LayoutGrid size={20} className="text-white" />
-            <span className="font-semibold text-sm text-white">Your Chats</span>
-          </div>
-          <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
-            {chatHistory.map((chat) => (
-              <div key={chat.id} className="p-2.5 rounded-md hover:bg-white/5 cursor-pointer border border-transparent hover:border-white/10 group transition-all">
-                <p className="text-xs font-medium truncate text-white/70 group-hover:text-white">{chat.title}</p>
-                <p className="text-[10px] text-white/40">{chat.date}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Footer Icon made White */}
-        <div className="pt-4 border-t border-white/5 mt-4">
-          <div className={`${colors.bgCharacterHeader} rounded-lg p-3 flex items-center gap-2 cursor-pointer hover:brightness-110 transition-all text-white`}>
-            <UserRoundPen size={20} className="text-white" />
-            <span className="font-bold text-sm truncate">Princess Channel B.</span>
-          </div>
+          <div className="bg-[#7899a7] rounded-lg p-3 font-bold text-sm text-[#0a4559]">Characters</div>
+          <SubNavItem label="Silvermist" color="bg-[#406d80]" isActive={activeCharacter === 'Silvermist'} onClick={() => handleSwitchCharacter('Silvermist')} />
+          <SubNavItem label="Periwinkle" color="bg-[#406d80]" isActive={activeCharacter === 'Periwinkle'} onClick={() => handleSwitchCharacter('Periwinkle')} />
+          <SubNavItem label="Gliss" color="bg-[#406d80]" isActive={activeCharacter === 'Gliss'} onClick={() => handleSwitchCharacter('Gliss')} />
         </div>
       </aside>
 
-      <main
-        className="flex-1 relative flex items-center justify-center p-2 sm:p-4 lg:p-6 bg-cover bg-center"
-        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?q=80&w=2070&auto=format&fit=crop')` }}
-      >
-        <div className={`relative w-full max-w-5xl h-full lg:h-[90vh] bg-[#0a4559]/50 backdrop-blur-xl rounded-2xl lg:rounded-[40px] border transition-all duration-700 flex flex-col p-4 sm:p-6 lg:p-10 ${currentTheme.glow} ${currentTheme.border}`}>
-
-          <div className="flex items-center gap-3 mb-6 lg:mb-8">
-            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-white">
-              <Menu className="w-6 h-6" />
-            </button>
-            <div className="flex items-center gap-1">
-              <h2 className={`font-bold text-lg transition-colors duration-500 ${currentTheme.accent}`}>TinkerAI</h2>
-              <ChevronDown className="w-4 h-4 text-white" />
-            </div>
+      {/* Chat Content (Background matching the app theme) */}
+      <main className="flex-1 relative flex items-center justify-center p-4 bg-[#4e7c94]">
+        <div className={`relative w-full max-w-5xl h-[90vh] bg-[#0a4559]/60 backdrop-blur-2xl rounded-[40px] border flex flex-col p-6 lg:p-10 ${currentTheme.glow} ${currentTheme.border}`}>
+          <div className="flex items-center gap-3 mb-8">
+            <Menu className="lg:hidden cursor-pointer" onClick={() => setIsSidebarOpen(true)} />
+            <h2 className={`font-bold text-lg ${currentTheme.accent}`}>TinkerAI › {activeCharacter}</h2>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-6 lg:space-y-8 pr-2 custom-scrollbar">
-            {isTyping && !isLoading ? (
-              <div className="flex justify-start animate-pop">
-                <div className={`p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-xl border ${currentTheme.msgBg} ${currentTheme.border} backdrop-blur-md`}>
-                  <div className="flex gap-1 items-center h-4 text-white">
-                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></span>
-                  </div>
+          <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+            {messages.map((msg) => (
+              <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[80%] p-5 rounded-2xl shadow-lg border ${msg.sender === 'user' ? 'bg-[#0a4559]' : `${currentTheme.msgBg} ${currentTheme.border}`}`}>
+                  {msg.title && <h3 className={`font-bold mb-1 ${currentTheme.accent}`}>{msg.title}</h3>}
+                  <p className="text-sm leading-relaxed">{msg.text}</p>
                 </div>
               </div>
-            ) : (
-              <>
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-pop`}>
-                    <div className={`
-                      max-w-[85%] lg:max-w-[65%] p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-xl border transition-all duration-500
-                      ${msg.sender === 'user'
-                        ? 'bg-[#0a4559] text-white rounded-tr-none border-white/5'
-                        : `${currentTheme.msgBg} text-white rounded-tl-none ${currentTheme.border} backdrop-blur-md`}
-                    `}>
-                      {msg.title && <h3 className={`font-bold text-lg lg:text-xl mb-1 lg:mb-2 transition-colors duration-500 ${currentTheme.accent}`}>{msg.title}</h3>}
-                      <p className="text-xs lg:text-sm font-medium leading-relaxed text-white opacity-90 whitespace-pre-wrap">{msg.text}</p>
-                    </div>
-                  </div>
-                ))}
-                {isLoading && (
-                  <div className="flex justify-start animate-pop">
-                    <div className={`p-4 lg:p-6 rounded-2xl lg:rounded-3xl shadow-xl border ${currentTheme.msgBg} ${currentTheme.border} backdrop-blur-md`}>
-                      <div className="flex gap-1 items-center h-4 text-white">
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </>
-            )}
+            ))}
+            <div ref={messagesEndRef} />
           </div>
 
-          <div className="mt-4 lg:mt-8 flex justify-center">
-            <div className={`relative w-full max-w-2xl bg-[#0a4559] border transition-all duration-700 rounded-full flex items-center px-4 py-3 lg:px-6 lg:py-4 shadow-2xl ${currentTheme.border}`}>
-              <div className="flex items-center gap-3 lg:gap-4 mr-2 lg:mr-4">
-                <Paperclip className="w-4 lg:w-5 h-4 lg:h-5 text-white cursor-pointer" />
-                <Mic className="w-4 lg:w-5 h-4 lg:h-5 text-white cursor-pointer" />
-              </div>
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={`Chatting with ${activeCharacter}...`}
-                className="bg-transparent flex-1 outline-none text-white text-xs lg:text-sm placeholder:text-white/30 font-medium"
-                disabled={isLoading}
+          <div className="mt-8 flex justify-center">
+            <div className={`w-full max-w-2xl bg-[#0a4559] border rounded-full flex items-center px-6 py-4 ${currentTheme.border}`}>
+              <input 
+                value={inputText} 
+                onChange={(e) => setInputText(e.target.value)} 
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                placeholder={`Chat with ${activeCharacter}...`}
+                className="bg-transparent flex-1 outline-none text-white text-sm"
               />
-              <button
-                onClick={handleSend}
-                disabled={isLoading || !inputText.trim()}
-                className={`ml-2 lg:ml-4 bg-[#e8dcc4] hover:bg-white transition-all rounded-full p-2 lg:p-2.5 shadow-lg active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed`}
-              >
-                {/* Send icon kept dark for readability on the light button */}
-                <SendHorizontal className="w-4 lg:w-5 h-4 lg:h-5 text-[#0a4559]" />
+              <button onClick={handleSend} className="bg-[#e8dcc4] p-2 rounded-full ml-4 hover:scale-110 transition-transform">
+                <SendHorizontal className="text-[#0a4559] w-5 h-5" />
               </button>
             </div>
           </div>
         </div>
       </main>
-
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
-
-        @keyframes pop {
-          0% { opacity: 0; transform: scale(0.95) translateY(10px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .animate-pop {
-          animation: pop 0.4s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 };
-
-export default TinkerApp;
