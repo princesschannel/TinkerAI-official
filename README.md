@@ -1,16 +1,47 @@
-# React + Vite
+## PROJECT OVERVIEW
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**What is TinkerAI?**
+- TinkerAI is a magical AI companion that I created, inspired by the enchanting world of Pixie Hollow. I designed it to blend modern artificial intelligence with fairy wisdom to provide guidance, comfort, and inspiration through charming fairy personas.
+- Whether the user needs academic help, heartfelt advice, or motivation to chase their dreams, TinkerAI is designed to light their path with a little sparkle.
 
-Currently, two official plugins are available:
+**Core Features:**
+- Academic Guidance
+- Emotional Support & Advice
+- Dream & Goal Motivation
+- Friendly Fairy Conversations
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**Theme:**
+- The theme of my project is inspired by the magical and whimsical world of fairies and the movie Tinkerbell. I wanted the design to feel dreamy, calming, and enchanting while still looking modern and clean. I wanted the theme color blue because, besides being my favorite color, the characters of this chabot are blue in the movie Tinkerbell.
+**Color Palette:** I used soft pastels, shimmering blues, silvers, and subtle gold accents to create a fairy-tale atmosphere.
+**Typography:** I chose elegant yet playful fonts to reflect warmth, magic, and imagination.
+**Visual Style:** I applied light, glowing elements, smooth gradients, and soft effects to give it a Pixie Hollow-inspired feel while keeping the interface minimal and professional.
 
-## React Compiler
+**Characters:**
+I created three fairy personas to guide users in different aspects of life:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Periwinkle (The Scholar Fairy )
+  She helps users with academics, homework, studying, and focus. Her personality is calm, clear, and encouraging.
 
-## Expanding the ESLint configuration
+- Silvermist (The Heart Fairy)
+  She offers emotional support and gentle advice whenever someone needs to talk. She is compassionate and understanding.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Gliss (The Dream Fairy)
+  She inspires confidence, motivation, and goal-setting. She is bright, positive, and uplifting.
+
+**Audience:**
+- My target audience is Gen Z students and young individuals who are looking for a digital companion.
+- Students who need academic assistance in a friendly way.
+- Young users who want emotional guidance in a safe and comforting space.
+- Dreamers who need motivation and encouragement.
+- Users who enjoy character-based AI experiences with personality and warmth.
+
+**User Manual**
+Chat with the Fairies:
+- Go to the TinkerAI website.
+- Click “Start Chatting” to begin chatting.
+- Choose your fairy.
+- Log in if you want to save your chats with the fairies.
+- Click the character above to know their character profile.
+- Click the about above to know what TinkerAI is.
+
+
